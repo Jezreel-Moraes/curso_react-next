@@ -1,11 +1,11 @@
-import { StrictMode } from "react";
-import { createRoot } from "react-dom/client";
+import React from "react";
+import ReactDOM from "react-dom/client";
 import "./styles/global-styles.css";
-import Home from "./templates/Home/Index";
+import { Home } from "./templates/Home";
 
-const root = createRoot(document.getElementById("root"));
+const root = ReactDOM.createRoot(document.getElementById("root"));
 root.render(
-  <StrictMode>
-    <Home />
-  </StrictMode>
+  // <React.StrictMode>
+  <Home />
+  // </React.StrictMode>
 );
