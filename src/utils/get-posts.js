@@ -15,16 +15,14 @@ const get50Photos = () => {
   };
 
   try {
-    if (false) {
-      return fetch(getPhotosUrl(), options)
-        .then((res) => res.json())
-        .then((res) =>
-          res.photos.map((photo) => {
-            return photo.src.medium;
-          })
-        );
-    }
-    throw new Error();
+    console.log("Usando a api de imagens");
+    return fetch(getPhotosUrl(), options)
+      .then((res) => res.json())
+      .then((res) =>
+        res.photos.map((photo) => {
+          return photo.src.medium;
+        })
+      );
   } catch (error) {
     return [];
   }

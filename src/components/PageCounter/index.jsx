@@ -9,13 +9,6 @@ export const PageCounter = ({
   page,
   maxPage,
 }) => {
-  console.log(" > RECEBI:");
-  console.log(handleChange);
-  console.log(postsPerPage);
-  console.log(postsAmount);
-  console.log(page);
-  console.log("maxpage = ", maxPage);
-
   const inputClassName = "posts-per-page";
 
   const selfHandleChange = (e) => {
@@ -40,7 +33,7 @@ export const PageCounter = ({
 
   return (
     <span>
-      Showing {console.log("Iniciando Page Counter")}
+      Showing
       <input
         type="number"
         onChange={selfHandleChange}

@@ -1,24 +1,25 @@
-import { useCallback, useEffect, useState } from "react";
+import { useEffect, useState } from "react";
 
 import "./styles.css";
 
 import { ChangePageButton } from "../../components/ChangePageButton";
+import { PageCounter } from "../../components/PageCounter";
 import { PostsContainer } from "../../components/PostsContainer";
 import { SearchBar } from "../../components/SearchBar";
-
-import { PageCounter } from "../../components/PageCounter";
 import { loadPosts } from "../../utils/get-posts";
 
 export const Home = () => {
   const [allPosts, setAllPosts] = useState([]);
-  const [pagePosts, setPagePosts] = useState([]);
-  const [filteredPosts, setFilteredPosts] = useState([]);
+  const [filteredBySearchPosts, setFilteredBySearchPosts] = useState([]);
+  const [currentPagePosts, setCurrentPagePosts] = useState([]);
   const [searchValue, setSearchValue] = useState("");
-  const [page, setPage] = useState(1);
+  const [currentPage, setCurrentPage] = useState(1);
   const [postsPerPage, setPostsPerPage] = useState(3);
 
+  const localStoragePosts = "allPosts";
+
   const pagesAmount = !!searchValue
-    ? filteredPosts.length / postsPerPage
+    ? filteredBySearchPosts.length / postsPerPage
     : allPosts.length / postsPerPage;
 
   const maxPage =
@@ -32,57 +33,72 @@ export const Home = () => {
     return (currentPage - 1) * postsPerPage;
   };
 
-  const updatePagePosts = (
+  const updateCurrentPagePosts = (
     currentPage,
     newPostsPerPage = null,
-    maybePosts = null
+    newPosts = null
   ) => {
-    const posts = maybePosts || allPosts;
+    const posts =
+      newPosts || (!!searchValue ? filteredBySearchPosts : allPosts);
     const postsAmount = newPostsPerPage || postsPerPage;
     const index = indexOfPostToRender(currentPage);
-    setPagePosts(posts.slice(index, index + postsAmount));
+    setCurrentPagePosts(posts.slice(index, index + postsAmount));
   };
 
-  const handleLoadPosts = useCallback(async () => {
-    console.log("so devo aparecer 1 vez");
-    const posts = await loadPosts();
-    setPage(1);
-    setAllPosts(posts);
-    updatePagePosts(1, null, posts);
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [setAllPosts]);
+  const getLocalPostsIfExists = () => {
+    return JSON.parse(localStorage.getItem(localStoragePosts));
+  };
 
-  const handleSearchBarChange = (e) => {
+  const handleLoadPosts = async () => {
+    const localPosts = getLocalPostsIfExists();
+    const posts = !!localPosts ? localPosts : await loadPosts();
+
+    if (!localPosts) {
+      localStorage.setItem(localStoragePosts, JSON.stringify(posts));
+    }
+
+    setCurrentPage(1);
+    setAllPosts(posts);
+    updateCurrentPagePosts(1, null, posts);
+  };
+
+  function handleSearchBarChange(e) {
     const value = e.target.value;
     setSearchValue(value);
     const newPosts = allPosts.filter((post) => {
       return post.title.toLowerCase().includes(value.toLowerCase());
     });
-    setPage(1);
-    setFilteredPosts(newPosts);
-    updatePagePosts(1, null, newPosts);
-  };
+    setCurrentPage(1);
+    setFilteredBySearchPosts(newPosts);
+    updateCurrentPagePosts(1, null, newPosts);
+  }
 
   const handleNextPage = (e) => {
-    if (page + 1 > maxPage) return;
-    setPage(page + 1);
-    updatePagePosts(page + 1, null, !!searchValue ? filteredPosts : null);
+    if (currentPage + 1 > maxPage) return;
+    setCurrentPage(currentPage + 1);
+    updateCurrentPagePosts(
+      currentPage + 1,
+      null,
+      !!searchValue ? filteredBySearchPosts : null
+    );
   };
 
   const handlePreviousPage = (e) => {
-    if (page - 1 < 1) return;
-    setPage(page - 1);
-    updatePagePosts(page - 1, null, !!searchValue ? filteredPosts : null);
+    if (currentPage - 1 < 1) return;
+    setCurrentPage(currentPage - 1);
+    updateCurrentPagePosts(
+      currentPage - 1,
+      null,
+      !!searchValue ? filteredBySearchPosts : null
+    );
   };
 
   const handlePostsPerPageChange = (e) => {
-    console.log("alo1");
     const value = Math.floor(Math.abs(e.target.value));
     const newPostsPerPage = value > 0 ? value : value + 1;
     setPostsPerPage(newPostsPerPage);
-    setPage(1);
-    updatePagePosts(1, newPostsPerPage);
-    console.log("alo2");
+    setCurrentPage(1);
+    updateCurrentPagePosts(1, newPostsPerPage);
   };
 
   useEffect(() => {
@@ -90,8 +106,7 @@ export const Home = () => {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
-  console.log(" >> CARREGANDO << ");
-
+  console.log("loaded");
   return (
     <section className="container">
       <div className={`search-container ${!!searchValue ? "searching" : ""}`}>
@@ -102,14 +117,16 @@ export const Home = () => {
         />
         {!!searchValue ? <h1>Search result for: {searchValue}</h1> : ""}
       </div>
-      <PostsContainer posts={pagePosts} />
+      <PostsContainer posts={currentPagePosts} />
       <div className="buttons-container">
         <ChangePageButton handleClick={handlePreviousPage} text={"<"} />
         <PageCounter
           handleChange={handlePostsPerPageChange}
           postsPerPage={postsPerPage}
-          postsAmount={!!searchValue ? filteredPosts.length : allPosts.length}
-          page={page}
+          postsAmount={
+            !!searchValue ? filteredBySearchPosts.length : allPosts.length
+          }
+          page={currentPage}
           maxPage={maxPage}
         />
         <ChangePageButton handleClick={handleNextPage} text={">"} />
